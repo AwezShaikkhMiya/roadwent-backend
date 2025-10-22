@@ -5,6 +5,7 @@ const session = require('express-session');
 const passport = require('passport');
 const cors = require('cors');
 const connectDB = require('./config/db');
+const MongoStore = require('connect-mongo');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -34,6 +35,10 @@ app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: true,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGODB_URI,
+    collectionName: 'sessions'
+  }),
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
