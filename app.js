@@ -1,4 +1,4 @@
-// server/server.js
+// backend/app.js
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
@@ -40,7 +40,7 @@ app.use(session({
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
-// Trust proxy for secure cookies on platforms like Render/Heroku
+// Trust proxy for secure cookies on platforms like Render/Heroku/Vercel
 if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
@@ -67,7 +67,7 @@ app.use('/api/estimates', estimateRoutes);
 
 // 1. The route to start the Google login process
 app.get('/auth/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] }) // We ask for profile and email info
+  passport.authenticate('google', { scope: ['profile', 'email'] })
 );
 
 // 2. The callback route that Google redirects to after login
@@ -82,19 +82,24 @@ app.get('/auth/google/callback',
 
 // 3. A simple route to check if the user is logged in
 app.get('/api/current_user', (req, res) => {
-    res.send(req.user); // req.user is populated by Passport if logged in
+  res.send(req.user);
+});
+
+// Alias for frontend compatibility
+app.get('/auth/current-user', (req, res) => {
+  res.send({ user: req.user || null });
 });
 
 // 4. Logout route
 app.get('/auth/logout', (req, res) => {
-    req.logout((err) => {
-      if (err) {
-        return res.status(500).json({ message: 'Error logging out' });
-      }
-      const origin = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
-      res.redirect(`${origin}/`); // Redirect to the home page
-    });
+  req.logout((err) => {
+    if (err) {
+      return res.status(500).json({ message: 'Error logging out' });
+    }
+    const origin = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
+    res.redirect(`${origin}/`);
+  });
 });
 
-const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => console.log(`Backend server running on http://localhost:${PORT}`));
+// Export the Express app (Vercel serverless will use this as the handler)
+module.exports = app;
