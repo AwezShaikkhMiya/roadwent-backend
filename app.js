@@ -77,13 +77,19 @@ app.get('/auth/google',
 
 // 2. The callback route that Google redirects to after login
 app.get('/auth/google/callback', 
-  passport.authenticate('google', { failureRedirect: '/login' }),
+  passport.authenticate('google', { failureRedirect: '/auth/google/failure' }),
   (req, res) => {
     // Successful authentication, redirect to the frontend estimator page.
     const origin = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
-    res.redirect(`${origin}/estimator`);
+    res.redirect(`${origin}/project-details`);
   }
 );
+
+// Optional explicit failure route to send users back to frontend login page
+app.get('/auth/google/failure', (_req, res) => {
+  const origin = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
+  res.redirect(`${origin}/login`);
+});
 
 // 3. A simple route to check if the user is logged in
 app.get('/api/current_user', (req, res) => {
